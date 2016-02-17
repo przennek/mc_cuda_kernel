@@ -75,7 +75,7 @@ int main(void) {
 	int threadsPerBlock = 257;
 	int blocksPerGrid = (1000 + threadsPerBlock - 1) / threadsPerBlock;
 
-
+	float t = 0;
 
 	 //liczymy pojedyncze T
 	 for(int i=0; i < 1000; i++) {
@@ -94,7 +94,7 @@ int main(void) {
 	 thrust::host_vector<float> in = disIn;
 
 	 for(int i = 0; i < k; i++) {
-		 isKTheLowestNumInArr(in, both[i]);
+		 t += isKTheLowestNumInArr(in, both[i]);
 	 }
 
 	 for(int i=0; i < 1000; i++){
