@@ -92,6 +92,6 @@ int main(void) {
 	 }
 	 cout << "\n";
 
-	cout << "Koniec.";
+//	cout << "Koniec.";
 	return 0;
 }
