@@ -19,7 +19,7 @@ countDis(float x, float y, float *x1, float *y1, float * result,  int numElement
 
     if (i < numElements) {
         result[i] = sqrt((x-x1[i])*(x-x1[i]) + (y-y1[i])*(y-y1[i]));
-        printf("%f \n", result[i] );
+
     }
 }
 
@@ -33,8 +33,8 @@ int main(void) {
 	thrust::host_vector<float> x2(nFPoints);
 	thrust::host_vector<float> y2(nFPoints);
 
-	thrust::host_vector<float> hdisIn(nFPoints);
-	thrust::host_vector<float> hdisOut(nFPoints);
+	thrust::host_vector<float> hdisIn(1000);
+	thrust::host_vector<float> hdisOut(1000);
 	thrust::host_vector<float> ht(nFPoints);
 
 	string line;
@@ -83,7 +83,7 @@ int main(void) {
 	    //countSingleT<<<blocksPerGrid, threadsPerBlock>>>(disIn, disOut, t , 1000, i +1000,k);
 	 }
 	 //suma tablicy t to pojedyncze T
-	 thrust::sort(thrust::raw_pointer_cast(&x1[0]), thrust::raw_pointer_cast(&x1[0]) + 1000);
+	 thrust::sort(disOut.begin(),disOut.end());
 	 thrust::host_vector<float> D = disOut;
 
 
