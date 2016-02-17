@@ -19,7 +19,7 @@ countDis(float x, float y, float *x1, float *y1, float * result,  int numElement
 
     if (i < numElements) {
         result[i] = sqrt((x-x1[i])*(x-x1[i]) + (y-y1[i])*(y-y1[i]));
-
+        printf("%f \n", result[i] );
     }
 }
 
@@ -84,7 +84,7 @@ int main(void) {
 	 }
 	 //suma tablicy t to pojedyncze T
 	 thrust::sort(thrust::raw_pointer_cast(&x1[0]), thrust::raw_pointer_cast(&x1[0]) + 1000);
-	 thrust::host_vector<float> D = x1;
+	 thrust::host_vector<float> D = disOut;
 
 
 	 for(int i = 0; i < 1000; i++) {
