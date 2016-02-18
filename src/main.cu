@@ -23,19 +23,27 @@ countDis(float x, float y, float *x1, float *y1, float * result,  int numElement
     }
 }
 
-int isKTheLowestNumInArr(thrust::host_vector<float> first, float kTheLowest) {
-	if(std::find(first.begin(), first.end(), x) != first.end()) {
-	    return 1;
-	} else {
-	    return 0;
+float isKTheLowestNumInArr(thrust::device_vector<float> first, float kTheLowest,int k) {
+	for(int i =0; i<k; i++){
+		//cout << kTheLowest << " " <<first[i]<<endl;
+		if (kTheLowest == first[i])
+		   return 1;
+		if(kTheLowest > first[i])
+			return 0;
 	}
+	return 0;
 }
 
 
 int main(void) {
 	const int nFPoints = 1000000;
 	const int size = nFPoints;
-	const int k = 5;
+	const float k = 5;
+
+	float tDivider = (2000*(k-1));
+	cout << (tDivider) << endl;
+	float mean = 0.49974;
+	float var = sqrt(0.0006);
 
 	thrust::host_vector<float> x1(nFPoints);
 	thrust::host_vector<float> y1(nFPoints);
@@ -70,44 +78,56 @@ int main(void) {
 
 	thrust::device_vector<float> disIn = hdisIn;
 	thrust::device_vector<float> disOut = hdisOut;
-	thrust::device_vector<float> t = ht;
+	thrust::device_vector<float> htd = ht;
 
 	int threadsPerBlock = 257;
 	int blocksPerGrid = (1000 + threadsPerBlock - 1) / threadsPerBlock;
 
 	float t = 0;
 
-	 //liczymy pojedyncze T
+	 for(int j = 0; j< 1000; j ++){
 	 for(int i=0; i < 1000; i++) {
-	    countDis<<<blocksPerGrid, threadsPerBlock>>>(x1[i],y1[i], thrust::raw_pointer_cast(&x1d[0]), thrust::raw_pointer_cast(&y1d[0]), thrust::raw_pointer_cast(&disIn[0]),1000);
-	    countDis<<<blocksPerGrid, threadsPerBlock>>>(x1[i],y1[i], thrust::raw_pointer_cast(&x2d[0]), thrust::raw_pointer_cast(&y2d[0]), thrust::raw_pointer_cast(&disOut[0]),1000);
-	    //do tablicy t na pozycje i wpisujemy ilosc sposrod k najblizszych dystatnsow z
-	    //disIn, disOut, ktore znajduja sie w disOut
-	    //countSingleT<<<blocksPerGrid, threadsPerBlock>>>(disIn, disOut, t , 1000, i,k);
+	    countDis<<<blocksPerGrid, threadsPerBlock>>>(x1[i+(j*1000)],y1[i+(j*1000)], thrust::raw_pointer_cast(&x1d[j*1000]), thrust::raw_pointer_cast(&y1d[j*1000]), thrust::raw_pointer_cast(&disIn[0]),1000);
+	    countDis<<<blocksPerGrid, threadsPerBlock>>>(x1[i+(j*1000)],y1[i+(j*1000)], thrust::raw_pointer_cast(&x2d[j*1000]), thrust::raw_pointer_cast(&y2d[j*1000]), thrust::raw_pointer_cast(&disOut[0]),1000);
+	    thrust::device_vector<float> disBoth = disIn;
+	    disBoth.insert(disBoth.end(), disOut.begin(), disOut.end());
+
+	    thrust::sort(disBoth.begin(),disBoth.end());
+	    thrust::sort(disOut.begin(), disOut.end());
+	    // thrust::host_vector<float> both = disBoth;
+	    // thrust::host_vector<float> in = disIn;
+
+	    for(int i = 0; i < k; i++) {
+	    	 t += isKTheLowestNumInArr(disOut, disBoth[i],k);
+	    }
+	   // cout << i << endl;
 	 }
 
-	 thrust::device_vector<float> disBoth = disIn;
-	 disBoth.insert(disBoth.end(), disOut.begin(), disOut.end());
 
-	 thrust::sort(disBoth.begin(),disBoth.end());
-	 thrust::host_vector<float> both = disBoth;
-	 thrust::host_vector<float> in = disIn;
-
-	 for(int i = 0; i < k; i++) {
-		 t += isKTheLowestNumInArr(in, both[i]);
-	 }
 
 	 for(int i=0; i < 1000; i++){
-		 countDis<<<blocksPerGrid, threadsPerBlock>>>(x2[i],y2[i], thrust::raw_pointer_cast(&x1d[0]), thrust::raw_pointer_cast(&y1d[0]), thrust::raw_pointer_cast(&disIn[0]),1000);
-		 countDis<<<blocksPerGrid, threadsPerBlock>>>(x2[i],y2[i], thrust::raw_pointer_cast(&x2d[0]), thrust::raw_pointer_cast(&y2d[0]), thrust::raw_pointer_cast(&disOut[0]),1000);
-	    //do tablicy t na pozycje i + 1000 wpisujemy ilosc sposord k najblizszych dystatnsow z
-	    //disIn, disOut, ktore znajduja sie w disOut
-	    //countSingleT<<<blocksPerGrid, threadsPerBlock>>>(disIn, disOut, t , 1000, i +1000,k);
+		 countDis<<<blocksPerGrid, threadsPerBlock>>>(x2[i+(j*1000)],y2[i+(j*1000)], thrust::raw_pointer_cast(&x1d[j*1000]), thrust::raw_pointer_cast(&y1d[j*1000]), thrust::raw_pointer_cast(&disOut[0]),1000);
+		 countDis<<<blocksPerGrid, threadsPerBlock>>>(x2[i+(j*1000)],y2[i+(j*1000)], thrust::raw_pointer_cast(&x2d[j*1000]), thrust::raw_pointer_cast(&y2d[j*1000]), thrust::raw_pointer_cast(&disIn[0]),1000);
+		 thrust::device_vector<float> disBoth = disIn;
+		 disBoth.insert(disBoth.end(), disOut.begin(), disOut.end());
+
+		 thrust::sort(disBoth.begin(),disBoth.end());
+		 thrust::sort(disOut.begin(), disOut.end());
+		 	// thrust::host_vector<float> both = disBoth;
+		 	// thrust::host_vector<float> in = disIn;
+
+		 for(int i = 1; i < k; i++) {
+		 	t += isKTheLowestNumInArr(disOut, disBoth[i],k);
+		 }
+		 //cout << i << endl;
 	 }
-	 //suma tablicy t to pojedyncze T
 
 
-
-//	cout << "Koniec.";
+	 cout << ((t/tDivider) -mean)*var << endl;
+	// cout << t << endl;
+	 t = 0;
+   }
+	cout << "Koniec.";
+	cudaDeviceReset();
 	return 0;
 }
